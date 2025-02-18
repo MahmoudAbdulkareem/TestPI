@@ -20,38 +20,37 @@ const ViewProfileLayer = () => {
     const token = localStorage.getItem('token');
 
     const [editing, setEditing] = useState(false);
-   
-    
+
     useEffect(() => {
         const fetchUserData = async () => {
-          try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-              setError('Not authenticated');
-              setLoading(false);
-              return;
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setError('Not authenticated');
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await axios.get('http://localhost:5001/api/users/profile', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setUserData(response.data); // Set user data from backend
+                setUpdatedUser(response.data); // Pre-fill form with current data
+                setLoading(false);
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    setError('Unauthorized. Please log in again.');
+                } else {
+                    setError('Failed to fetch user data. Please try again.');
+                }
+                setLoading(false);
             }
-    
-            const response = await axios.get('http://localhost:5001/api/users/profile', {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-    
-            setUserData(response.data); // Set user data from backend
-            setUpdatedUser(response.data); // Pre-fill form with current data
-            setLoading(false);
-          } catch (error) {
-            if (error.response && error.response.status === 401) {
-              setError('Unauthorized. Please log in again.');
-            } else {
-              setError('Failed to fetch user data. Please try again.');
-            }
-            setLoading(false);
-          }
         };
-    
+
         fetchUserData();
-      }, []);
-      
+    }, []);
+
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
     };
@@ -65,6 +64,7 @@ const ViewProfileLayer = () => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImagePreview(e.target.result);
+                setUpdatedUser({ ...updatedUser, image: input.target.files[0] });
             };
             reader.readAsDataURL(input.target.files[0]);
         }
@@ -72,7 +72,7 @@ const ViewProfileLayer = () => {
 
     const handleEditClick = () => {
         setEditing(true);
-      };
+    };
 
     const handleCancelClick = () => {
         setEditing(false);
