@@ -16,21 +16,36 @@ const ViewProfileLayer = () => {
     });
     const [editing, setEditing] = useState(false);
     const [updatedUser, setUpdatedUser] = useState({ ...user });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await axios.get('/api/user/last-signed-in-user');
+                const token = localStorage.getItem('token'); // Get token from storage
+                if (!token) {
+                    console.error('No token found, user not authenticated');
+                    setLoading(false);
+                    return;
+                }
+    
+                const response = await axios.get('http://localhost:5001/api/users/profile', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+    
                 setUserData(response.data);
                 setUser(response.data);
-                setUpdatedUser(response.data); // Initialize the updated profile
+                setUpdatedUser(response.data);
+                setLoading(false);
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error('Error fetching user data:', error.response?.data || error.message);
+                setLoading(false);
             }
         };
-
+    
         fetchUserData();
     }, []);
+    
 
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
@@ -66,9 +81,13 @@ const ViewProfileLayer = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!userData || !userData._id) {
+            console.error('User data is not available');
+            return;
+        }
+
         try {
             const formData = new FormData();
-            formData.append('userId', userData._id);
             formData.append('name', updatedUser.name);
             formData.append('email', updatedUser.email);
             formData.append('phoneNumber', updatedUser.phoneNumber);
@@ -77,19 +96,23 @@ const ViewProfileLayer = () => {
                 formData.append('image', updatedUser.image);
             }
 
-            const response = await axios.put('/api/user/update-profile', formData, {
+            const response = await axios.put(`http://localhost:5001/api/users/update-profile/${userData._id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            setUserData(response.data);
-            setUser(response.data);
+            setUserData(response.data.user);
+            setUser(response.data.user);
             setEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
         }
     };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="row gy-4">
@@ -376,91 +399,35 @@ const ViewProfileLayer = () => {
                                 tabIndex={0}
                             >
                                 <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="companzNew"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
+                                  
                                     <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Company News
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="companzNew"
-                                        />
+                                   
                                     </div>
                                 </div>
                                 <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="pushNotifcation"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
+                                
                                     <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Push Notification
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="pushNotifcation"
-                                            defaultChecked=""
-                                        />
+                                       
+                                      
                                     </div>
                                 </div>
                                 <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="weeklyLetters"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
+                                   
                                     <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Weekly News Letters
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="weeklyLetters"
-                                            defaultChecked=""
-                                        />
+                                 
                                     </div>
                                 </div>
                                 <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="meetUp"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
+                                 
                                     <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Meetups Near you
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="meetUp"
-                                        />
+                                     
+                                   
                                     </div>
                                 </div>
                                 <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="orderNotification"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
+                                  
                                     <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Orders Notifications
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="orderNotification"
-                                            defaultChecked=""
-                                        />
+                                  
                                     </div>
                                 </div>
                             </div>
