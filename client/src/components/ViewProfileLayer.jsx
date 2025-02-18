@@ -14,39 +14,44 @@ const ViewProfileLayer = () => {
         role: '',
         image: ''
     });
-    const [editing, setEditing] = useState(false);
-    const [updatedUser, setUpdatedUser] = useState({ ...user });
+    const [updatedUser, setUpdatedUser] = useState({});
+    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const token = localStorage.getItem('token');
 
+    const [editing, setEditing] = useState(false);
+   
+    
     useEffect(() => {
         const fetchUserData = async () => {
-            try {
-                const token = localStorage.getItem('token'); // Get token from storage
-                if (!token) {
-                    console.error('No token found, user not authenticated');
-                    setLoading(false);
-                    return;
-                }
-    
-                const response = await axios.get('http://localhost:5001/api/users/profile', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                
-    
-                setUserData(response.data);
-                setUser(response.data);
-                setUpdatedUser(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching user data:', error.response?.data || error.message);
-                setLoading(false);
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+              setError('Not authenticated');
+              setLoading(false);
+              return;
             }
+    
+            const response = await axios.get('http://localhost:5001/api/users/profile', {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+    
+            setUserData(response.data); // Set user data from backend
+            setUpdatedUser(response.data); // Pre-fill form with current data
+            setLoading(false);
+          } catch (error) {
+            if (error.response && error.response.status === 401) {
+              setError('Unauthorized. Please log in again.');
+            } else {
+              setError('Failed to fetch user data. Please try again.');
+            }
+            setLoading(false);
+          }
         };
     
         fetchUserData();
-    }, []);
-    
-
+      }, []);
+      
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
     };
@@ -67,7 +72,7 @@ const ViewProfileLayer = () => {
 
     const handleEditClick = () => {
         setEditing(true);
-    };
+      };
 
     const handleCancelClick = () => {
         setEditing(false);
@@ -96,10 +101,11 @@ const ViewProfileLayer = () => {
                 formData.append('image', updatedUser.image);
             }
 
-            const response = await axios.put(`http://localhost:5001/api/users/update-profile/${userData._id}`, formData, {
+            const response = await axios.put(`/api/user/update-profile/${userData._id}`, formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`,
+                  },
             });
 
             setUserData(response.data.user);
@@ -173,6 +179,8 @@ const ViewProfileLayer = () => {
                     </div>
                 </div>
             </div>
+
+            
             <div className="col-lg-8">
                 <div className="card h-100">
                     <div className="card-body p-24">

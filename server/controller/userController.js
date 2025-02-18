@@ -21,7 +21,7 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12); // Increased bcrypt rounds for security
         const imageUrl = req.file ? req.file.path : "";
 
         const newUser = new User({
@@ -37,7 +37,7 @@ const registerUser = async (req, res) => {
         res.status(201).json({ message: "User registered successfully", user: newUser });
     } catch (error) {
         console.error("Error during registration:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Error during registration", error: error.message });
     }
 };
 
@@ -59,7 +59,7 @@ const signInUser = async (req, res) => {
         res.status(200).json({ token, role: user.role });
     } catch (error) {
         console.error("Sign-in error:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Error during sign-in", error: error.message });
     }
 };
 
@@ -95,7 +95,7 @@ const requestPasswordReset = async (req, res) => {
         res.json({ message: "Reset password link sent!" });
     } catch (error) {
         console.error("Password reset error:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Error during password reset", error: error.message });
     }
 };
 
@@ -107,7 +107,7 @@ const resetPassword = async (req, res) => {
         const user = await User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
         if (!user) return res.status(400).json({ message: "Invalid or expired token" });
 
-        user.password = await bcrypt.hash(password, 10);
+        user.password = await bcrypt.hash(password, 12);
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
 
@@ -115,54 +115,52 @@ const resetPassword = async (req, res) => {
         res.json({ message: "Password reset successful!" });
     } catch (error) {
         console.error("Error resetting password:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Error resetting password", error: error.message });
     }
 };
 
 // Get User Profile
 const getLastSignedInUser = async (req, res) => {
-    const { user } = req;
-
     try {
-        const profile = await User.findById(user.userId);
-        if (!profile) return res.status(404).json({ message: "User not found" });
-
-        res.status(200).json(profile);
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        console.log("Decoded User in Request:", req.user); // Debugging
+        const user = await User.findById(req.user.email);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.json(user);
+    } catch (err) {
+        console.error("Error fetching user profile:", err);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
+
 // Update User Profile
 const updateUserProfile = async (req, res) => {
-  const { name, email, phoneNumber, role } = req.body;
-  const { userId } = req.user; // Extract userId from the token (authProfile middleware)
+    const { name, email, phoneNumber, role } = req.body;
+    const { userId } = req.user;
 
-  try {
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ message: "User not found" });
-      }
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-      // Update user details
-      user.name = name || user.name;
-      user.email = email || user.email;
-      user.phoneNumber = phoneNumber || user.phoneNumber;
-      user.role = role || user.role;
+        user.name = name || user.name;
+        user.email = email || user.email;
+        user.phoneNumber = phoneNumber || user.phoneNumber;
+        user.role = role || user.role;
 
-      // If an image is uploaded, update it
-      if (req.file) {
-          user.image = req.file.path;
-      }
+        if (req.file) {
+            user.image = req.file.path;
+        }
 
-      const updatedUser = await user.save();
-      res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (error) {
-      console.error("Error updating profile:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
-  }
+        const updatedUser = await user.save();
+        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Error updating profile", error: error.message });
+    }
 };
-
 
 module.exports = { registerUser, signInUser, requestPasswordReset, resetPassword, getLastSignedInUser, updateUserProfile };

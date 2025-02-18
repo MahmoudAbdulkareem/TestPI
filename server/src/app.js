@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(authProfile());
 
 // Database connection
 dbConfig();
