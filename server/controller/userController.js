@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 const { User } = require("../models/user");
 const { validationResult } = require("express-validator");
 require("dotenv").config();
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' }); // Define your storage settings
 
 // User Registration
 const registerUser = async (req, res) => {
@@ -54,6 +56,7 @@ const signInUser = async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
 
+        // Sign the JWT with userId and role
         const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         res.status(200).json({ token, role: user.role });
@@ -62,6 +65,7 @@ const signInUser = async (req, res) => {
         res.status(500).json({ message: "Error during sign-in", error: error.message });
     }
 };
+
 
 // Request Password Reset
 const requestPasswordReset = async (req, res) => {
@@ -118,49 +122,80 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ message: "Error resetting password", error: error.message });
     }
 };
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');  // Assuming User is the model for your users
 
-// Get User Profile
-const getLastSignedInUser = async (req, res) => {
-    try {
-        console.log("Decoded User in Request:", req.user); // Debugging
-        const user = await User.findById(req.user.email);
-        if (!user) {
-            return res.status(404).json({ msg: 'User not found' });
-        }
-        res.json(user);
-    } catch (err) {
-        console.error("Error fetching user profile:", err);
-        res.status(500).json({ msg: 'Server error' });
-    }
+
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) return res.status(403).send("No token provided.");
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(401).send("Unauthorized.");
+
+        req.userId = decoded.userId;  // Correctly extract userId from token
+        next(); // Proceed to the next middleware (e.g., fetching or updating user)
+    });
 };
 
 
-// Update User Profile
+// Fetch the user profile
+const getLastSignedInUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json({
+            name: user.name,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            image: user.image,
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user data', error: error.message });
+    }
+};
+
+// Update user profile
 const updateUserProfile = async (req, res) => {
     const { name, email, phoneNumber, role } = req.body;
-    const { userId } = req.user;
+    const { image } = req.files || {}; // Assuming you are using multer for file uploads
 
     try {
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
         user.name = name || user.name;
         user.email = email || user.email;
         user.phoneNumber = phoneNumber || user.phoneNumber;
         user.role = role || user.role;
 
-        if (req.file) {
-            user.image = req.file.path;
+        if (image) {
+            // Update image (assuming image is uploaded as a file)
+            user.image = image.path;
         }
 
-        const updatedUser = await user.save();
-        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+        await user.save();
+        res.json({
+            message: 'Profile updated successfully',
+            user,
+        });
     } catch (error) {
-        console.error("Error updating profile:", error);
-        res.status(500).json({ message: "Error updating profile", error: error.message });
+        res.status(500).json({ message: 'Error updating profile', error: error.message });
     }
 };
 
-module.exports = { registerUser, signInUser, requestPasswordReset, resetPassword, getLastSignedInUser, updateUserProfile };
+
+
+
+module.exports = { 
+    registerUser, 
+    signInUser, 
+    requestPasswordReset, 
+    resetPassword, 
+    getUserProfile, 
+    updateUserProfile, 
+    verifyToken 
+};

@@ -86,33 +86,54 @@ const ViewProfileLayer = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        console.log("Updated User:", updatedUser);
+        
         if (!userData || !userData._id) {
             console.error('User data is not available');
             return;
         }
-
+    
         try {
             const formData = new FormData();
+    
             formData.append('name', updatedUser.name);
             formData.append('email', updatedUser.email);
             formData.append('phoneNumber', updatedUser.phoneNumber);
             formData.append('role', updatedUser.role);
+    
             if (updatedUser.image) {
                 formData.append('image', updatedUser.image);
             }
-
-            const response = await axios.put(`/api/user/update-profile/${userData._id}`, formData, {
+    
+            // Log FormData entries for debugging
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+    
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token not available');
+                return;
+            }
+    
+            // Make the PUT request
+            const response = await axios.put('http://localhost:5001/api/users/update', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`,
-                  },
+                },
             });
-
-            setUserData(response.data.user);
-            setUser(response.data.user);
+    
+            console.log('Update Response:', response.data);
+            
+            // Update the state with the new user data
+            setUserData(response.data.user); // Assuming the response has `user` object with updated data
+            setUpdatedUser(response.data.user);
             setEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
+            setError('Error updating profile. Please try again.');
         }
     };
 
