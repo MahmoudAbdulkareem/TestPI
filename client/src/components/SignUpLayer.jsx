@@ -33,7 +33,11 @@ const SignUpLayer = () => {
         }
       });
       console.log(response.data);
-      toast.success('Sign-up successful!', {
+      toast.success(
+        <>
+          <Icon style={{ color: "green", marginRight: "8px" }} />
+          Sign-up successful! Please verify your email address.
+        </>, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,

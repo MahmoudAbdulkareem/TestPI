@@ -5,8 +5,7 @@ const router = express.Router();
 
 router.post('/sign-up', upload.single('image'), registerUser);
 router.post('/sign-in', signInUser);
-router.post('/verify-email/:token');
-  
+router.post('/verify-email/:token', verifyEmail);
 router.post('/resend-verification-email', resendVerificationEmail);
 
 
