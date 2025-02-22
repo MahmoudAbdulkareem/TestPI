@@ -14,8 +14,13 @@ const ViewProfileLayer = () => {
         role: '',
         image: ''
     });
-    const [updatedUser, setUpdatedUser] = useState({});
-    const [error, setError] = useState(null);
+    
+    const [updatedUser, setUpdatedUser] = useState({
+        name: "",
+        email: "",
+        phoneNumber: "",
+    });
+        const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const token = localStorage.getItem('token');
     const [newPassword, setNewPassword] = useState('');
@@ -46,7 +51,6 @@ const ViewProfileLayer = () => {
             } else {
                 setError('Failed to fetch user data. Please try again.');
             }
-            setLoading(false);
         }
     };
     
@@ -83,39 +87,60 @@ const ViewProfileLayer = () => {
         const { name, value } = e.target;
         setUpdatedUser({ ...updatedUser, [name]: value });
     };
+    
+    
     const handleChangePassword = async (e) => {
         e.preventDefault();
-
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
+    
+        console.log("Change password button clicked");
+    
+        if (newPassword.length < 8) {
+            setError("Password must be at least 8 characters long");
+            console.error("Password too short");
             return;
         }
-
+    
+        if (newPassword !== confirmPassword) {
+            setError("Passwords do not match");
+            console.error("Passwords do not match");
+            return;
+        }
+    
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem("token");
             if (!token) {
-                console.error('Token not available');
+                console.error("No token found in localStorage");
+                setError("Unauthorized. Please log in again.");
                 return;
             }
-
-            const response = await axios.put('http://localhost:5001/api/profile/change-password', {
-                newPassword,
-                confirmPassword
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            console.log('Password Change Response:', response.data);
+    
+            console.log("Token retrieved from localStorage:", token);
+    
+            const response = await axios.put(
+                "http://localhost:5001/api/profile/change-password",
+                { newPassword, confirmPassword },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+    
+            console.log("Password Change Response:", response.data);
             setError(null);
-            setNewPassword('');
-            setConfirmPassword('');
+            setNewPassword("");
+            setConfirmPassword("");
+            alert("Password changed successfully!");
         } catch (error) {
-            console.error('Error changing password:', error);
-            setError('Error changing password. Please try again.');
+            console.error("Error changing password:", error.response?.data || error);
+            setError(error.response?.data?.message || "Error changing password. Please try again.");
         }
     };
+    
+
+
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -312,162 +337,158 @@ const ViewProfileLayer = () => {
                                     </div>
                                 </div>
                                 <form onSubmit={handleSubmit}>
-                                    <div className="row">
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="name"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                     Full Name
-                                                    <span className="text-danger-600">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control radius-8"
-                                                    id="name"
-                                                    name="name"
-                                                    value={updatedUser.name}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Enter Full Name"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="email"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Email <span className="text-danger-600">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control radius-8"
-                                                    id="email"
-                                                    name="email"
-                                                    value={updatedUser.email}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Enter E-mail"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="number"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Phone Number
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control radius-8"
-                                                    id="number"
-                                                    name="phoneNumber"
-                                                    value={updatedUser.phoneNumber}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Enter phone number"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="desig"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Role
-                                                    <span className="text-danger-600">*</span>{" "}
-                                                </label>
-                                                <select
-                                                    className="form-control radius-8 form-select"
-                                                    id="role"
-                                                    name="role"
-                                                    value={updatedUser.role}
-                                                    onChange={handleInputChange}
-                                                    defaultValue="Select Role Title"
-                                                >
-                                                    <option value="Select Role Title" disabled>
-                                                        Select Role Title
-                                                    </option>
-                                                    <option value="Business owner">Business owner</option>
-                                                    <option value="Financial manager">Financial manager</option>
-                                                    <option value="Accountant">Accountant</option>
-                                                    <option value="Admin">Admin</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="d-flex align-items-center justify-content-center gap-3">
-                                        <button
-                                            type="button"
-                                            className="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-56 py-11 radius-8"
-                                            onClick={handleCancelClick}
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary border border-primary-600 text-md px-56 py-12 radius-8"
-                                        >
-                                            Save
-                                        </button>
-                                    </div>
-                                </form>
+    <div className="row">
+        {/* Full Name */}
+        <div className="col-sm-6">
+            <div className="mb-20">
+                <label htmlFor="name" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                    Full Name <span className="text-danger-600">*</span>
+                </label>
+                <input
+                    type="text"
+                    className="form-control radius-8"
+                    id="name"
+                    name="name"
+                    value={updatedUser?.name || ""}
+                    onChange={handleInputChange}
+                    placeholder="Enter Full Name"
+                    required
+                />
+            </div>
+        </div>
+
+        {/* Email */}
+        <div className="col-sm-6">
+            <div className="mb-20">
+                <label htmlFor="email" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                    Email <span className="text-danger-600">*</span>
+                </label>
+                <input
+                    type="email"
+                    className="form-control radius-8"
+                    id="email"
+                    name="email"
+                    value={updatedUser?.email || ""}
+                    onChange={handleInputChange}
+                    placeholder="Enter Your Email"
+                    required
+                />
+            </div>
+        </div>
+
+        {/* Phone Number */}
+        <div className="col-sm-6">
+            <div className="mb-20">
+                <label htmlFor="phoneNumber" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                    Phone Number
+                </label>
+                <input
+                    type="text"
+                    className="form-control radius-8"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={updatedUser?.phoneNumber || ""}
+                    onChange={handleInputChange}
+                    placeholder="Enter Phone Number"
+                />
+            </div>
+        </div>
+
+        {/* Role Selection */}
+        <div className="col-sm-6">
+            <div className="mb-20">
+                <label htmlFor="role" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                    Role <span className="text-danger-600">*</span>
+                </label>
+                <select
+                    className="form-control radius-8 form-select"
+                    id="role"
+                    name="role"
+                    value={updatedUser?.role || ""}
+                    onChange={handleInputChange}
+                    required
+                >
+                    <option value="" disabled>Select Role Title</option>
+                    <option value="Business owner">Business owner</option>
+                    <option value="Financial manager">Financial manager</option>
+                    <option value="Accountant">Accountant</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    {/* Submit Button */}
+    <div className="d-flex justify-content-end mt-3">
+        <button type="submit" className="btn btn-primary px-4 py-2">
+            Save Changes
+        </button>
+    </div>
+</form>
+
                             </div>
                             <div className="tab-pane fade" id="pills-change-passwork" role="tabpanel" aria-labelledby="pills-change-passwork-tab" tabIndex="0">
-                                <div className="mb-20">
-                                    <label htmlFor="your-password" className="form-label fw-semibold text-primary-light text-sm mb-8">
-                                        New Password <span className="text-danger-600">*</span>
-                                    </label>
-                                    <div className="d-flex align-items-center justify-content-center gap-3">
-                                        <button
-                                            type="button"
-                                            className="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-56 py-11 radius-8"
-                                            onClick={handleCancelClick}
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary border border-primary-600 text-md px-56 py-12 radius-8"
-                                        >
-                                            Change Password
-                                        </button>
-                                    </div>
-                                    <div className="position-relative">
-                                        <input
-                                            type={passwordVisible ? "text" : "password"}
-                                            className="form-control radius-8"
-                                            id="your-password"
-                                            placeholder="Enter New Password*"
-                                        />
-                                        <span
-                                            className={`toggle-password ${passwordVisible ? "ri-eye-off-line" : "ri-eye-line"} cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light`}
-                                            onClick={togglePasswordVisibility}
-                                        ></span>
-                                    </div>
-                                </div>
+    <form onSubmit={handleChangePassword}>
+        <div className="mb-20">
+            <label htmlFor="your-password" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                New Password <span className="text-danger-600">*</span>
+            </label>
+            <div className="position-relative">
+                <input
+                    type={passwordVisible ? "text" : "password"}
+                    className="form-control radius-8"
+                    id="your-password"
+                    placeholder="Enter New Password*"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <span
+                    className={`toggle-password ${passwordVisible ? "ri-eye-off-line" : "ri-eye-line"} cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light`}
+                    onClick={togglePasswordVisibility}
+                ></span>
+            </div>
+        </div>
 
-                                <div className="mb-20">
-                                    <label htmlFor="confirm-password" className="form-label fw-semibold text-primary-light text-sm mb-8">
-                                        Confirm Password <span className="text-danger-600">*</span>
-                                    </label>
-                                    <div className="position-relative">
-                                        <input
-                                            type={confirmPasswordVisible ? "text" : "password"}
-                                            className="form-control radius-8"
-                                            id="confirm-password"
-                                            placeholder="Confirm Password*"
-                                        />
-                                        <span
-                                            className={`toggle-password ${confirmPasswordVisible ? "ri-eye-off-line" : "ri-eye-line"} cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light`}
-                                            onClick={toggleConfirmPasswordVisibility}
-                                        ></span>
-                                    </div>
-                                </div>
-                            </div>
+        <div className="mb-20">
+            <label htmlFor="confirm-password" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                Confirm Password <span className="text-danger-600">*</span>
+            </label>
+            <div className="position-relative">
+                <input
+                    type={confirmPasswordVisible ? "text" : "password"}
+                    className="form-control radius-8"
+                    id="confirm-password"
+                    placeholder="Confirm Password*"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <span
+                    className={`toggle-password ${confirmPasswordVisible ? "ri-eye-off-line" : "ri-eye-line"} cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light`}
+                    onClick={toggleConfirmPasswordVisibility}
+                ></span>
+            </div>
+        </div>
+
+        {error && <p className="text-danger">{error}</p>}
+
+        <div className="d-flex align-items-center justify-content-center gap-3">
+            <button
+                type="button"
+                className="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-56 py-11 radius-8"
+                onClick={handleCancelClick}
+            >
+                Cancel
+            </button>
+            <button
+                type="submit"
+                className="btn btn-primary border border-primary-600 text-md px-56 py-12 radius-8"
+            >
+                Change Password
+            </button>
+        </div>
+    </form>
+</div>
+
                             <div
                                 className="tab-pane fade"
                                 id="pills-notification"

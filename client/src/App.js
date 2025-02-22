@@ -8,6 +8,7 @@ import BusinessOwnerPage from "./pages/BuisnessOwnerPage.jsx"; // Ensure this pa
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import ViewProfilePage from "./pages/ViewProfilePage.jsx";
+import VerifyEmailPage from './pages/VerifyEmailPage'; // This should be correct if the file exists in the 'pages' folder
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route exact path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route exact path='/reset-password/:token' element={<ResetPasswordPage />} />
         <Route exact path='/view-profile' element={<ViewProfilePage />} />
+        <Route exact path="/verify-email/:token" element={<VerifyEmailPage />} />
 
         {/* Private Routes for role-based access */}
         <Route 
