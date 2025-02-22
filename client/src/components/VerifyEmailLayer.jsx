@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import ViewProfileLayer from './ViewProfileLayer';
 
-const VerifyEmailPage = () => {
+const VerifyEmailLayer = () => {
     const { token } = useParams(); // Retrieve the token from the URL
     const navigate = useNavigate(); // Hook to navigate to other routes
     const [loading, setLoading] = useState(true); // Loading state for verification process
@@ -27,7 +28,9 @@ const VerifyEmailPage = () => {
                 });
 
                 // Navigate to the sign-in page after verification
-                navigate('/sign-in', { replace: true });
+                setTimeout(() => {
+                    navigate('/sign-in', { replace: true });
+                }, 2000); // Add delay before navigating
 
             } catch (error) {
                 console.error('Error verifying email:', error.response ? error.response.data : error.message);
@@ -59,4 +62,4 @@ const VerifyEmailPage = () => {
     );
 };
 
-export default VerifyEmailPage;
+export default VerifyEmailLayer;
