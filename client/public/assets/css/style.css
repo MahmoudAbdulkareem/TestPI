@@ -8578,6 +8578,7 @@ h6,
 .btn.btn-sm {
   padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
+  margin-top : 15px;
 }
 
 .btn-success {

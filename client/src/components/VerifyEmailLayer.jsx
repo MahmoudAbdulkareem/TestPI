@@ -48,7 +48,7 @@ const VerifyEmailLayer = () => {
             }
         };
 
-        verifyEmail(); // Call the verifyEmail function when the component mounts
+        verifyEmail(); 
     }, [token, navigate]);
 
     return (
