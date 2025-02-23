@@ -57,6 +57,57 @@ const ViewProfileLayer = () => {
     useEffect(() => {
         fetchUserData();
     }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+    
+        console.log("Updated User:", updatedUser);
+    
+        if (!userData || !userData._id) {
+            console.error('User data is not available');
+            return;
+        }
+    
+        try {
+            const formData = new FormData();
+    
+            formData.append('name', updatedUser.name);
+            formData.append('email', updatedUser.email);
+            formData.append('phoneNumber', updatedUser.phoneNumber);
+            formData.append('role', updatedUser.role);
+    
+            if (updatedUser.image) {
+                formData.append('image', updatedUser.image);
+            }
+    
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+    
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token not available');
+                return;
+            }
+    
+            const response = await axios.put('http://localhost:5001/api/profile/edit', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+    
+            console.log('Update Response:', response.data);
+            
+            setUserData(response.data.user); 
+            setUpdatedUser(response.data.user);
+            setEditing(false);
+            fetchUserData(); 
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setError('Error updating profile. Please try again.');
+        }
+    };
     
 
     const togglePasswordVisibility = () => {
@@ -141,56 +192,7 @@ const ViewProfileLayer = () => {
 
 
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        console.log("Updated User:", updatedUser);
-        
-        if (!userData || !userData._id) {
-            console.error('User data is not available');
-            return;
-        }
-
-        try {
-            const formData = new FormData();
-
-            formData.append('name', updatedUser.name);
-            formData.append('email', updatedUser.email);
-            formData.append('phoneNumber', updatedUser.phoneNumber);
-            formData.append('role', updatedUser.role);
-
-            if (updatedUser.image) {
-                formData.append('image', updatedUser.image);
-            }
-
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.error('Token not available');
-                return;
-            }
-
-            const response = await axios.put('http://localhost:5001/api/profile/edit', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            console.log('Update Response:', response.data);
-            
-            setUserData(response.data.user); 
-            setUpdatedUser(response.data.user);
-            setEditing(false);
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            setError('Error updating profile. Please try again.');
-        }
-    };
-
+    
     if (loading) {
         return <div>Loading...</div>;
     }
