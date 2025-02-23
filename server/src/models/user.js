@@ -45,11 +45,11 @@ const userSchema = new mongoose.Schema(
     },
     verificationToken: {
       type: String,
-      required: false, // Optional, only generated during email verification
+      required: false, 
     },
     isVerified: {
       type: Boolean,
-      default: false, // User is unverified by default
+      default: false,
     },
   },
   { timestamps: true } 

@@ -7,6 +7,7 @@ const { validationResult } = require("express-validator");
 require("dotenv").config();
 
 // User Registration
+
 const registerUser = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -31,11 +32,9 @@ const registerUser = async (req, res) => {
             phoneNumber,
             role,
             image: imageUrl,
-            isVerified: false, // Add a field to check if the user is verified
+            isVerified: false, 
         });
 
-
-        // Generate an email verification token
         const verificationToken = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
@@ -43,7 +42,6 @@ const registerUser = async (req, res) => {
         newUser.verificationToken = verificationToken;
         await newUser.save();
 
-        // Send email with the verification link
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -52,7 +50,8 @@ const registerUser = async (req, res) => {
             },
         });
 
-        const verificationUrl = `http://localhost:3000/sign-in`;
+        const verificationUrl = `http://localhost:5001/api/users/verify-email/${verificationToken}?email=${newUser.email}&redirect=sign-in`;
+
         const mailOptions = {
             to: newUser.email,
             from: process.env.EMAIL_USER,
@@ -70,13 +69,15 @@ const registerUser = async (req, res) => {
     }
 };
 
+
 // User Sign-In
+
 const signInUser = async (req, res) => {
     try {
       const { email, password } = req.body;
   
       const user = await User.findOne({ email });
-  
+     
       if (!user) {
         return res.status(400).json({ message: "User not found" });
       }
@@ -99,23 +100,23 @@ const signInUser = async (req, res) => {
     }
   };
   
+
 // Request Password Reset
+
 const requestPasswordReset = async (req, res) => {
     const { email } = req.body;
-
+    
     try {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Generate reset token
         const resetToken = crypto.randomBytes(32).toString("hex");
         user.resetPasswordToken = resetToken;
-        user.resetPasswordExpires = Date.now() + 3600000; // Token expires in 1 hour
+        user.resetPasswordExpires = Date.now() + 3600000; 
         await user.save();
 
-        // Send email
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -140,7 +141,9 @@ const requestPasswordReset = async (req, res) => {
     }
 };
 
+
 // Reset Password
+
 const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
@@ -148,14 +151,13 @@ const resetPassword = async (req, res) => {
     try {
         const user = await User.findOne({
             resetPasswordToken: token,
-            resetPasswordExpires: { $gt: Date.now() }, // Check if token is still valid
+            resetPasswordExpires: { $gt: Date.now() }, 
         });
 
         if (!user) {
             return res.status(400).json({ message: "Invalid or expired token" });
         }
 
-        // Hash new password
         user.password = await bcrypt.hash(password, 10);
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
@@ -168,34 +170,41 @@ const resetPassword = async (req, res) => {
     }
 };
 
+
 // Email Verification
+
 const verifyEmail = async (req, res) => {
+    const { verificationToken } = req.params;
+    const { email, redirect } = req.query; 
+
     try {
-        console.log("Incoming request:", req.params.email);
-        
-        const { email } = req.params;
         const user = await User.findOne({ email });
 
         if (!user) {
-            console.log("User not found for email:", email);
             return res.status(404).json({ message: "User not found" });
         }
 
-        if (user.isVerified) {
-            console.log("User already verified:", email);
-            return res.status(400).json({ message: "Email is already verified" });
-        }
+        jwt.verify(verificationToken, process.env.JWT_SECRET, async (err, decoded) => {
+            if (err) {
+                return res.status(400).json({ message: "Invalid or expired verification token" });
+            }
 
-        user.isVerified = true;
-        await user.save();
-        console.log("User verified successfully:", email);
+            if (decoded.userId !== user._id.toString()) {
+                return res.status(400).json({ message: "Token mismatch" });
+            }
 
-        res.status(200).json({ message: "Email verified successfully!" });
+            user.isVerified = true;
+            user.verificationToken = null; 
+            await user.save();
+
+            res.redirect(`http://localhost:3000/${redirect}?verified=true`);
+        });
     } catch (error) {
-        console.error("Server error:", error);
-        res.status(500).json({ message: "Server error", error });
+        console.error("Error during email verification:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
+
 
 
 
@@ -220,6 +229,7 @@ const sendVerificationEmail = async (email, verificationUrl) => {
 
 
 // Resend Verification Email
+
 const resendVerificationEmail = async (req, res) => {
     const { email } = req.body;
     try {
@@ -232,12 +242,10 @@ const resendVerificationEmail = async (req, res) => {
             return res.status(400).json({ message: "Email already verified" });
         }
 
-        // Generate a new email verification token
         const verificationToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
 
-        // Send email with the new verification link
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -246,7 +254,7 @@ const resendVerificationEmail = async (req, res) => {
             },
         });
 
-        const verificationUrl = `http://localhost:3000/verify-email/${verificationToken}`;
+        const verificationUrl = `http://localhost:5001/api/users/verify-email/${verificationToken}?email=${user.email}&redirect=sign-in`;
         const mailOptions = {
             to: email,
             from: process.env.EMAIL_USER,
@@ -254,8 +262,9 @@ const resendVerificationEmail = async (req, res) => {
             text: `Please click the link to verify your email address: ${verificationUrl}`,
         };
 
+
+
         await transporter.sendMail(mailOptions);
-        // Save the verification token to the user's document in the database
         user.verificationToken = verificationToken;
         await user.save();
         res.status(200).json({ message: "Verification email resent!" });
@@ -263,6 +272,7 @@ const resendVerificationEmail = async (req, res) => {
         res.status(500).json({ message: "Server error", error });
     }
 };
+
 
 module.exports = { 
     registerUser, 

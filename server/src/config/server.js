@@ -5,7 +5,7 @@ const userRoutes = require('../routes/userRoute');
 const profileRoutes = require('../routes/profileRoute');
 const bodyParser = require('body-parser');
 const cors = require("cors");
-const upload = require('../middelwares/uploadImage');
+const upload = require('../middlewares/uploadImage');
 require('dotenv').config();
 
 dotenv.config();
@@ -21,7 +21,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use('/api/profile', profileRoutes); // Ensure this line is present
+app.use('/api/profile', profileRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

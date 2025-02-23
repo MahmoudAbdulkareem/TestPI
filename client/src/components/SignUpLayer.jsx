@@ -24,18 +24,17 @@ const SignUpLayer = () => {
       toast.error("Please enter your email first!");
       return;
     }
-  
+
     try {
-      const response = await axios.get(`http://localhost:5001/api/users/verify-email/${formData.email}`);
+      const response = await axios.get(`http://localhost:5001/api/email/email=${formData.email}`);
       console.log(response.data);
       toast.success("Email verified successfully!");
+      window.location.href = "http://localhost:3000/sign-in?verified=true";
     } catch (error) {
       console.error("Error verifying email:", error);
       toast.error(error.response?.data?.message || "Failed to verify email.");
     }
   };
-  
-  
 
   const handleResendEmail = async () => {
     if (!formData.email) {
@@ -127,21 +126,13 @@ const SignUpLayer = () => {
             </div>
 
             <button type='submit' className='btn btn-primary w-100 mt-32 radius-12'>Sign Up</button>
-
             <div className='d-flex justify-content-end mt-2'>
-              <button type='button' onClick={handleVerifyEmail} className='btn btn-secondary radius-12'>
-                Verify Email
+              <button type='button' onClick={handleResendEmail} className='btn btn-secondary btn-sm radius-12'>
+              Resend Verification Email
               </button>
             </div>
            
-           
-            <div className='d-flex justify-content-end mt-2'>
-              <button type='button' onClick={handleResendEmail} className='btn btn-secondary radius-12'>
-                Resend Verification Email
-              </button>
-            </div>
-           
-
+          
             <div className='mt-32 text-center text-sm'>
               <p>Already have an account? <Link to='/sign-in' className='text-primary-600'>Sign In</Link></p>
             </div>

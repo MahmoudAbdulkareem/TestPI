@@ -41,7 +41,7 @@ const ViewProfileLayer = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
     
-            console.log(response.data); // Check user data in console
+            console.log(response.data); 
             setUserData(response.data);
             setUpdatedUser(response.data);
             setLoading(false);
@@ -163,7 +163,6 @@ const ViewProfileLayer = () => {
                 formData.append('image', updatedUser.image);
             }
 
-            // Log FormData entries for debugging
             for (let [key, value] of formData.entries()) {
                 console.log(key, value);
             }
@@ -174,7 +173,6 @@ const ViewProfileLayer = () => {
                 return;
             }
 
-            // Make the PUT request
             const response = await axios.put('http://localhost:5001/api/profile/edit', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -184,8 +182,7 @@ const ViewProfileLayer = () => {
 
             console.log('Update Response:', response.data);
             
-            // Update the state with the new user data
-            setUserData(response.data.user); // Assuming the response has `user` object with updated data
+            setUserData(response.data.user); 
             setUpdatedUser(response.data.user);
             setEditing(false);
         } catch (error) {

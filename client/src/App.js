@@ -19,7 +19,6 @@ function App() {
         <Route exact path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route exact path='/reset-password/:token' element={<ResetPasswordPage />} />
         <Route exact path='/view-profile' element={<ViewProfilePage />} />
-        <Route exact path="/verify-email/:token" element={<SignUpPage />} />
 
         {/* Private Routes for role-based access */}
         <Route 
