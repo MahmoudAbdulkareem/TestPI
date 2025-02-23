@@ -194,7 +194,7 @@ const verifyEmail = async (req, res) => {
             }
 
             user.isVerified = true;
-            user.verificationToken = null; 
+            user.verificationToken = verificationToken; 
             await user.save();
 
             res.redirect(`http://localhost:3000/${redirect}?verified=true`);

@@ -19,22 +19,6 @@ const SignUpLayer = () => {
     setFormData(prevState => ({ ...prevState, image: e.target.files[0] }));
   };
 
-  const handleVerifyEmail = async () => {
-    if (!formData.email) {
-      toast.error("Please enter your email first!");
-      return;
-    }
-
-    try {
-      const response = await axios.get(`http://localhost:5001/api/email/email=${formData.email}`);
-      console.log(response.data);
-      toast.success("Email verified successfully!");
-      window.location.href = "http://localhost:3000/sign-in?verified=true";
-    } catch (error) {
-      console.error("Error verifying email:", error);
-      toast.error(error.response?.data?.message || "Failed to verify email.");
-    }
-  };
 
   const handleResendEmail = async () => {
     if (!formData.email) {
