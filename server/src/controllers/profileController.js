@@ -6,26 +6,39 @@ const { User } = require('../models/user');
 const viewProfile = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
+
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ message: "Unauthorized. No token provided." });
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); 
 
-        const user = await User.findById(decoded.userId).exec(); // Use `userId` from token
+        const user = await User.findById(decoded.userId)
+            .select('-password -verificationToken') 
+            .exec(); 
+
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json(user);
+        res.status(200).json({
+            ...user.toObject(), 
+            status: user.isActive ? 'Active' : 'Inactive' 
+        });
     } catch (error) {
         if (error.name === "JsonWebTokenError") {
             return res.status(401).json({ message: "Invalid token" });
+        } else if (error.name === "TokenExpiredError") {
+            return res.status(401).json({ message: "Token expired. Please log in again." });
         }
-        res.status(500).json({ message: error.message });
+
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+
 
 
 const updateProfile = async (req, res) => {
@@ -36,8 +49,8 @@ const updateProfile = async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify token
-        const userId = decoded.userId; // Get user ID from decoded token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); 
+        const userId = decoded.userId; 
 
         const updatedData = req.body;
 
@@ -64,7 +77,6 @@ const changePassword = async (req, res) => {
     try {
         console.log("🔹 Incoming request to change password");
 
-        // Extract Authorization Header
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             console.error("❌ Unauthorized request - No token provided");
@@ -74,7 +86,6 @@ const changePassword = async (req, res) => {
         const token = authHeader.split(" ")[1];
         console.log("🔹 Token received:", token);
 
-        // Verify Token
         let decoded;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -87,7 +98,6 @@ const changePassword = async (req, res) => {
         const userId = decoded.userId;
         console.log("🔹 User ID from token:", userId);
 
-        // Extract New Passwords
         const { newPassword, confirmPassword } = req.body;
         console.log("🔹 Passwords received:", { newPassword, confirmPassword });
 
@@ -106,11 +116,9 @@ const changePassword = async (req, res) => {
             return res.status(400).json({ message: "Passwords do not match." });
         }
 
-        // Hash New Password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         console.log("🔹 Password hashed successfully");
 
-        // Update User Password in Database
         const user = await User.findByIdAndUpdate(userId, { password: hashedPassword }, { new: true });
 
         if (!user) {

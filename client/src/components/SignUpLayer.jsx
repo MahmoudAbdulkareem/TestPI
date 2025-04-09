@@ -55,14 +55,13 @@ const SignUpLayer = () => {
     <section className='auth bg-base d-flex flex-wrap'>
       <div className='auth-left d-lg-block d-none'>
         <div className='d-flex align-items-center flex-column h-100 justify-content-center'>
-          <img src='/assets/images/signup.jpg' alt='Sign up illustration' />
+        <img src='/assets/images/signup.jpg' alt='Illustration of signing up' />
         </div>
       </div>
       <div className='auth-right py-32 px-24 d-flex flex-column justify-content-center'>
         <div className='max-w-464-px mx-auto w-100'>
-          <Link to='/' className='mb-40 max-w-290-px'>
-            <img src='/assets/images/2.png' alt='LOGO FINOVA' />
-          </Link>
+        <h1 className="mb-12" style={{ color: "blue" }}>Finova</h1>
+
           <h4 className='mb-12'>Sign Up to your Account</h4>
           <p className='mb-32 text-secondary-light text-lg'>Welcome! Please enter your details</p>
 
@@ -110,11 +109,11 @@ const SignUpLayer = () => {
             </div>
 
             <button type='submit' className='btn btn-primary w-100 mt-32 radius-12'>Sign Up</button>
-            <div className='d-flex justify-content-end mt-2'>
-              <button type='button' onClick={handleResendEmail} className='btn btn-secondary btn-sm radius-12'>
-              Resend Verification Email
-              </button>
-            </div>
+            <div className='d-flex justify-content-end mt-1'>
+            <button type='button' onClick={handleResendEmail} className='btn btn-secondary btn-sm radius-8 px-3 py-1'>
+          Resend Verification Email
+            </button>
+              </div>
            
           
             <div className='mt-32 text-center text-sm'>

@@ -1,0 +1,38 @@
+[
+  {
+    "category": "Grocery",
+    "amount": 900,
+    "createdBy": "65d8a4f93d3b5c001e5e2a1d",
+    "date": "2024-04-01T00:00:00.000Z"
+  },
+  {
+    "category": "Internet Bill",
+    "amount": 200,
+    "createdBy": "65d8a4f93d3b5c001e5e2a1e",
+    "date": "2024-04-02T00:00:00.000Z"
+  },
+  {
+    "category": "Entertainment Bill ",
+    "amount": 450,
+    "createdBy": "65d8a4f93d3b5c001e5e2a1f",
+    "date": "2024-04-03T00:00:00.000Z"
+  },
+  {
+    "category": "Transportation",
+    "amount": 300,
+    "createdBy": "65d8a4f93d3b5c001e5e2a1g",
+    "date": "2024-04-04T00:00:00.000Z"
+  },
+  {
+    "category": "Health Insurance",
+    "amount": 600,
+    "createdBy": "65d8a4f93d3b5c001e5e2a1h",
+    "date": "2024-04-05T00:00:00.000Z"
+  },
+  {
+    "category": "Shopping",
+    "amount": 800,
+    "createdBy": "65d8a4f93d3b5c001e5e2a1i",
+    "date": "2024-04-06T00:00:00.000Z"
+  }
+]

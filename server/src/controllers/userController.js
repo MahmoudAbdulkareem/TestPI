@@ -1,12 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const { User } = require("../models/user");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 const { validationResult } = require("express-validator");
+const { image } = require("../config/cloudinary");
 require("dotenv").config();
-
-// User Registration
 
 const registerUser = async (req, res) => {
     try {
@@ -21,9 +20,13 @@ const registerUser = async (req, res) => {
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
-
         const hashedPassword = await bcrypt.hash(password, 10);
-        const imageUrl = req.file ? req.file.path : "";
+
+        if (!req.file) {
+            return res.status(400).json({ message: "Image file is missing" });
+        }
+
+        const imageUrl = req.file.path; 
 
         const newUser = new User({
             name,
@@ -61,117 +64,84 @@ const registerUser = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.status(201).json({
-            message: "User registered successfully. Please check your email to verify your account.",
-        });
+        res.status(201).json({ message: "User registered successfully. Please check your email to verify your account", user: newUser });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-
 // User Sign-In
-
 const signInUser = async (req, res) => {
     try {
-      const { email, password } = req.body;
-  
-      const user = await User.findOne({ email });
-     
-      if (!user) {
-        return res.status(400).json({ message: "User not found" });
-      }
-  
-      if (!user.isVerified) {
-        return res.status(403).json({ message: "Please verify your email before signing in." });
-      }
-  
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: "Invalid credentials" });
-      }
-  
-      const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-  
-      res.json({ token, role: user.role });
-    } catch (error) {
-      console.error("Sign-in error:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  };
-  
+        const { email, password } = req.body;
 
-// Request Password Reset
-
-const requestPasswordReset = async (req, res) => {
-    const { email } = req.body;
-    
-    try {
         const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, role: user.role, email: user.email, image: user.image, phoneNumber: user.phoneNumber }, 
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 60 * 60 * 1000
+        });
+
+        res.status(200).json({ token, role: user.role, image: user.image , phoneNumber: user.phoneNumber});
+        } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// User Logout
+const logout = (req, res) => {
+    res.cookie("token", "", { maxAge: 0 });
+    res.json({ message: "Logged out successfully" });
+};
+
+// Check Authentication
+const checkAuth = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const user = await User.findById(req.user.userId).select("-password"); // Exclude password
+
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const resetToken = crypto.randomBytes(32).toString("hex");
-        user.resetPasswordToken = resetToken;
-        user.resetPasswordExpires = Date.now() + 3600000; 
-        await user.save();
-
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
-
-        const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
-        const mailOptions = {
-            to: user.email,
-            from: process.env.EMAIL_USER,
-            subject: "Password Reset",
-            text: `You requested a password reset. Click the link below to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.`,
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        res.json({ message: "Reset password link sent!" });
+        res.json({ user });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 
-
-// Reset Password
-
-const resetPassword = async (req, res) => {
-    const { token } = req.params;
-    const { password } = req.body;
+const getUserImageByEmail = async (req, res) => {
+    const { email } = req.params; // Fetch email from request parameters
 
     try {
-        const user = await User.findOne({
-            resetPasswordToken: token,
-            resetPasswordExpires: { $gt: Date.now() }, 
-        });
-
+        const user = await User.findOne({ email }).select('image'); // Select only the image field
         if (!user) {
-            return res.status(400).json({ message: "Invalid or expired token" });
+            return res.status(404).json({ message: "User not found" });
         }
-
-        user.password = await bcrypt.hash(password, 10);
-        user.resetPasswordToken = null;
-        user.resetPasswordExpires = null;
-
-        await user.save();
-
-        res.json({ message: "Password reset successful!" });
+        res.json({ imageUrl: user.image });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 
-
-// Email Verification
 
 const verifyEmail = async (req, res) => {
     const { verificationToken } = req.params;
@@ -205,30 +175,6 @@ const verifyEmail = async (req, res) => {
     }
 };
 
-
-
-
-const sendVerificationEmail = async (email, verificationUrl) => {
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-
-    const mailOptions = {
-        to: email,
-        from: process.env.EMAIL_USER,
-        subject: "Email Verification",
-        text: `Click the link to verify your email: ${verificationUrl}`,
-    };
-
-    await transporter.sendMail(mailOptions);
-};
-
-
-// Resend Verification Email
 
 const resendVerificationEmail = async (req, res) => {
     const { email } = req.body;
@@ -274,12 +220,38 @@ const resendVerificationEmail = async (req, res) => {
 };
 
 
-module.exports = { 
-    registerUser, 
-    signInUser, 
-    requestPasswordReset, 
-    resetPassword, 
-    verifyEmail, 
-    sendVerificationEmail,
-    resendVerificationEmail 
+
+const fetchUsersByFilters = async (req, res) => {
+    const { username, email, phoneNumber, role } = req.query;
+
+    try {
+        const query = {};
+
+        if (username) {
+            query.name = { $regex: username, $options: 'i' };
+        }
+
+        if (email) {
+            query.email = { $regex: email, $options: 'i' };
+        }
+
+        if (phoneNumber) {
+            query.phoneNumber = { $regex: phoneNumber, $options: 'i' };
+        }
+
+        if (role) {
+            query.role = role;
+        }
+
+        const users = await User.find(query);
+
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
 };
+
+
+
+
+module.exports = { registerUser, signInUser, logout, checkAuth,getUserImageByEmail , verifyEmail  , resendVerificationEmail , fetchUsersByFilters};

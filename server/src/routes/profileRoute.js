@@ -4,7 +4,7 @@ const { viewProfile, updateProfile, changePassword } = require('../controllers/p
 const upload = require('../middlewares/uploadImage');
 const router = express.Router();
 
-router.get('/view', viewProfile); // Ensure this line is present and correct
+router.get('/view', viewProfile); 
 router.put('/edit', upload.single('image'), updateProfile);
 router.put('/change-password', changePassword);
 

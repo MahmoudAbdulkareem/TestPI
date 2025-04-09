@@ -5220,8 +5220,8 @@ const useReactApexChart = () => {
   ];
 
   let userOverviewDonutChartOptionsTwo = {
-    colors: ["#FF9F29", "#487FFF", "#45B369", "#9935FE"],
-    labels: ["Purchase", "Sales", "Expense", "Gross Profit"],
+    colors: ["#6EC5FF", "#003366", "#4CAF50"], // Light Blue, Dark Blue, Greenish Blue for Purchase, Expense, and Revenue
+    labels: ["Income", "Expense", "Revenue"], // Updated labels
     legend: {
       show: false,
     },
@@ -5264,7 +5264,7 @@ const useReactApexChart = () => {
       },
     ],
   };
-
+  
   let userOverviewDonutChartSeriesTwo = [30, 30, 20, 20];
 
   let purchaseSaleChartOptions = {
