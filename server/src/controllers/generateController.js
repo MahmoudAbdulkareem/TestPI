@@ -24,6 +24,7 @@ const generateExcel = async (req, res) => {
       pattern: 'solid',
       fgColor: { argb: 'FF007ACC' }, 
     };
+    
 
     transactions.forEach(tx => {
       worksheet.addRow({

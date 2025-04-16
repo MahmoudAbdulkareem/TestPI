@@ -11,8 +11,7 @@ import RecentTransactions from "./child/RecentTransactions";
 const DashBoardLayerTen = () => {
   return (
     <div className='row gy-4'>
-      {/* IncomeStatement  */}
-      <IncomeStatement   />
+   
 
       {/* IncomeVsExpense */}
       <IncomeVsExpense />

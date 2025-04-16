@@ -34,9 +34,9 @@ const IncomeStatement = () => {
                 </div>
                 <p className="text-sm mb-0">
                   <span className="bg-success-focus px-1 rounded-2 fw-medium text-success-main text-sm">
-                    <i className="ri-arrow-right-up-line" /> 80%
+                    <i className="ri-arrow-right-up-line" /> 
                   </span>{" "}
-                  From last year{" "}
+                  {" "}
                 </p>
               </div>
             </div>
@@ -57,9 +57,9 @@ const IncomeStatement = () => {
                 </div>
                 <p className="text-sm mb-0">
                   <span className="bg-success-focus px-1 rounded-2 fw-medium text-success-main text-sm">
-                    <i className="ri-arrow-right-up-line" /> 60%
+                    <i className="ri-arrow-right-up-line" /> 
                   </span>{" "}
-                  From last year{" "}
+                  {" "}
                 </p>
               </div>
             </div>
@@ -80,9 +80,9 @@ const IncomeStatement = () => {
                 </div>
                 <p className="text-sm mb-0">
                   <span className="bg-success-focus px-1 rounded-2 fw-medium text-success-main text-sm">
-                    <i className="ri-arrow-right-up-line" /> 75%
+                    <i className="ri-arrow-right-up-line" /> 
                   </span>{" "}
-                  From last year{" "}
+                  {" "}
                 </p>
               </div>
             </div>
@@ -103,7 +103,7 @@ const IncomeStatement = () => {
                 </div>
                 <p className="text-sm mb-0">
                   <span className="bg-success-focus px-1 rounded-2 fw-medium text-success-main text-sm">
-                    <i className="ri-arrow-right-up-line" /> 10%
+                    <i className="ri-arrow-right-up-line" /> 
                   </span>{" "}                </p>
               </div>
             </div>

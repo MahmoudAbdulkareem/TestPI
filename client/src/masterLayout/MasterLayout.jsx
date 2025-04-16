@@ -297,7 +297,7 @@ const MasterLayout = ({ children }) => {
                     }
                   >
                     <i className='ri-circle-fill circle-icon text-info-main w-auto' />{" "}
-                    POS & Inventory
+                      Financial Overview
                   </NavLink>
                 </li>
                 <li>
